@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Student</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f8;
+            padding: 40px;
+        }
+
+        .form-container {
+            width: 500px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0 15px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #0d6efd;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .back {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="form-container">
+
+    <h2>Edit Student</h2>
+
+    <form
+        th:action="@{/students/update/{id}(id=${student.studentId})}"
+        th:object="${student}"
+        method="post">
+
+        <label>Name</label>
+
+        <input
+            type="text"
+            th:field="*{name}"
+            required>
+
+
+        <label>Roll Number</label>
+
+        <input
+            type="text"
+            th:field="*{rollNumber}"
+            required>
+
+
+        <label>Email</label>
+
+        <input
+            type="email"
+            th:field="*{email}"
+            required>
+
+
+        <label>Contact</label>
+
+        <input
+            type="text"
+            th:field="*{contact}"
+            maxlength="10"
+            required>
+
+
+        <button type="submit">
+            Update Student
+        </button>
+
+    </form>
+
+    <a href="/students" class="back">
+        ← Back to Students
+    </a>
+
+</div>
+
+</body>
+</html>

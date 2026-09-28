@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Edit Session</title>
+
+    <style>
+
+        body {
+            font-family: Arial;
+            background: #f4f6f8;
+            padding: 40px;
+        }
+
+        .form-container {
+            width: 500px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            background: #0d6efd;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .back {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="form-container">
+
+    <h2>Edit Session</h2>
+
+    <form
+        th:action="@{/sessions/update/{id}(id=${session.sessionId})}"
+        th:object="${session}"
+        method="post">
+
+        <label>Subject</label>
+
+        <select name="subjectId" required>
+
+            <option
+                th:each="subject : ${subjects}"
+                th:value="${subject.subjectId}"
+                th:text="${subject.subjectName}"
+                th:selected="${session.subject != null and session.subject.subjectId == subject.subjectId}">
+            </option>
+
+        </select>
+
+
+        <label>Session Date</label>
+
+        <input
+            type="date"
+            th:field="*{sessionDate}"
+            required>
+
+
+        <label>Start Time</label>
+
+        <input
+            type="time"
+            th:field="*{startTime}"
+            required>
+
+
+        <label>End Time</label>
+
+        <input
+            type="time"
+            th:field="*{endTime}"
+            required>
+
+
+        <button type="submit">
+            Update Session
+        </button>
+
+    </form>
+
+    <a href="/sessions" class="back">
+        ← Back to Sessions
+    </a>
+
+</div>
+
+</body>
+
+</html>

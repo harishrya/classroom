@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Add Student</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f8;
+            padding: 40px;
+        }
+
+        .form-container {
+            width: 500px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0 15px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #198754;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .back {
+            display: block;
+            margin-top: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="form-container">
+
+    <h2>Add Student</h2>
+
+    <form
+        th:action="@{/students/save}"
+        th:object="${student}"
+        method="post">
+
+        <label>Name</label>
+        <input
+            type="text"
+            th:field="*{name}"
+            placeholder="Enter student name"
+            required>
+
+        <label>Roll Number</label>
+        <input
+            type="text"
+            th:field="*{rollNumber}"
+            placeholder="Enter roll number"
+            required>
+
+        <label>Email</label>
+        <input
+            type="email"
+            th:field="*{email}"
+            placeholder="Enter email"
+            required>
+
+        <label>Contact</label>
+        <input
+            type="text"
+            th:field="*{contact}"
+            placeholder="10 digit contact number"
+            maxlength="10"
+            required>
+
+        <button type="submit">
+            Save Student
+        </button>
+
+    </form>
+
+    <a href="/students" class="back">
+        ← Back to Students
+    </a>
+
+</div>
+
+</body>
+</html>

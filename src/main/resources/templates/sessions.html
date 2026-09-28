@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Sessions</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .add-btn {
+            display: inline-block;
+            padding: 10px 18px;
+            background: #198754;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background: #212529;
+            color: white;
+        }
+
+        .edit {
+            background: #0d6efd;
+            color: white;
+            padding: 6px 10px;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+
+        .delete {
+            background: #dc3545;
+            color: white;
+            padding: 6px 10px;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Session Management</h1>
+
+    <a href="/sessions/new" class="add-btn">
+        + Add Session
+    </a>
+
+    <table>
+
+        <thead>
+
+        <tr>
+            <th>ID</th>
+            <th>Subject</th>
+            <th>Date</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Actions</th>
+        </tr>
+
+        </thead>
+
+        <tbody>
+
+        <tr th:each="session : ${sessions}">
+
+            <td th:text="${session.sessionId}">
+                1
+            </td>
+
+            <td
+                th:text="${session.subject.subjectName}">
+                Mathematics
+            </td>
+
+            <td
+                th:text="${session.sessionDate}">
+                2026-09-28
+            </td>
+
+            <td
+                th:text="${session.startTime}">
+                09:00
+            </td>
+
+            <td
+                th:text="${session.endTime}">
+                10:00
+            </td>
+
+            <td>
+
+                <a
+                    th:href="@{/sessions/edit/{id}(id=${session.sessionId})}"
+                    class="edit">
+                    Edit
+                </a>
+
+                <a
+                    th:href="@{/sessions/delete/{id}(id=${session.sessionId})}"
+                    class="delete"
+                    onclick="return confirm('Delete this session?');">
+                    Delete
+                </a>
+
+            </td>
+
+        </tr>
+
+        <tr th:if="${#lists.isEmpty(sessions)}">
+
+            <td colspan="6">
+                No sessions found.
+            </td>
+
+        </tr>
+
+        </tbody>
+
+    </table>
+
+</div>
+
+</body>
+
+</html>
