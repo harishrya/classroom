@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Attendance Marking</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #222;
+        }
+
+        .top-section {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        .btn {
+            padding: 11px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            padding: 13px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background: #343a40;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .status-present {
+            color: #198754;
+            font-weight: bold;
+        }
+
+        .status-absent {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .message {
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .success-message {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .back-link {
+            margin-top: 25px;
+            display: inline-block;
+        }
+
+        @media (max-width: 768px) {
+            .top-section {
+                flex-direction: column;
+            }
+
+            table {
+                font-size: 13px;
+            }
+
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Classroom Attendance Marking</h1>
+
+    <!-- Success Message -->
+    <div th:if="${success}"
+         class="message success-message"
+         th:text="${success}">
+    </div>
+
+    <!-- Error Message -->
+    <div th:if="${error}"
+         class="message error-message"
+         th:text="${error}">
+    </div>
+
+
+    <!-- Attendance Selection -->
+    <form th:action="@{/attendance/save}" method="post">
+
+        <div class="top-section">
+
+            <!-- Session -->
+            <div class="form-group">
+                <label for="sessionId">Select Session</label>
+
+                <select id="sessionId"
+                        name="sessionId"
+                        required>
+
+                    <option value="">-- Select Session --</option>
+
+                    <option th:each="session : ${sessions}"
+                            th:value="${session.sessionId}"
+                            th:text="${session.subject.subjectCode + ' - '
+                            + session.subject.subjectName + ' | '
+                            + session.sessionDate + ' | '
+                            + session.startTime + ' - '
+                            + session.endTime}">
+                    </option>
+
+                </select>
+            </div>
+
+
+            <!-- Date -->
+            <div class="form-group">
+
+                <label for="attendanceDate">
+                    Attendance Date
+                </label>
+
+                <input type="date"
+                       id="attendanceDate"
+                       name="attendanceDate"
+                       required>
+
+            </div>
+
+        </div>
+
+
+        <!-- Student Attendance Table -->
+
+        <table>
+
+            <thead>
+            <tr>
+                <th>S.No</th>
+                <th>Student ID</th>
+                <th>Student Name</th>
+                <th>Attendance</th>
+            </tr>
+            </thead>
+
+            <tbody>
+
+            <tr th:each="student, stat : ${students}">
+
+                <td th:text="${stat.count}">
+                    1
+                </td>
+
+                <td th:text="${student.studentId}">
+                    1
+                </td>
+
+                <td th:text="${student.studentName}">
+                    Student Name
+                </td>
+
+                <td>
+
+                    <label style="display: inline-block; margin-right: 15px;">
+                        <input type="radio"
+                               th:name="'attendance_' + ${student.studentId}"
+                               value="PRESENT"
+                               required>
+                        Present
+                    </label>
+
+                    <label style="display: inline-block;">
+                        <input type="radio"
+                               th:name="'attendance_' + ${student.studentId}"
+                               value="ABSENT">
+                        Absent
+                    </label>
+
+                </td>
+
+            </tr>
+
+            <tr th:if="${#lists.isEmpty(students)}">
+
+                <td colspan="4">
+                    No students available.
+                </td>
+
+            </tr>
+
+            </tbody>
+
+        </table>
+
+
+        <!-- Buttons -->
+
+        <div style="margin-top: 25px; text-align: center;">
+
+            <button type="submit"
+                    class="btn btn-success">
+                Save Attendance
+            </button>
+
+            <a th:href="@{/}"
+               class="btn btn-secondary">
+                Back
+            </a>
+
+        </div>
+
+    </form>
+
+
+    <!-- Existing Attendance -->
+
+    <div th:if="${attendanceRecords != null}">
+
+        <h2 style="margin-top: 40px; margin-bottom: 15px;">
+            Attendance Records
+        </h2>
+
+        <table>
+
+            <thead>
+
+            <tr>
+                <th>S.No</th>
+                <th>Student</th>
+                <th>Subject</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+
+            </thead>
+
+            <tbody>
+
+            <tr th:each="attendance, stat : ${attendanceRecords}">
+
+                <td th:text="${stat.count}">
+                    1
+                </td>
+
+                <td th:text="${attendance.student.studentName}">
+                    Student
+                </td>
+
+                <td th:text="${attendance.session.subject.subjectName}">
+                    Subject
+                </td>
+
+                <td th:text="${attendance.session.sessionDate}">
+                    2026-01-01
+                </td>
+
+                <td>
+
+                    <span th:if="${attendance.status == 'PRESENT'}"
+                          class="status-present">
+                        PRESENT
+                    </span>
+
+                    <span th:if="${attendance.status == 'ABSENT'}"
+                          class="status-absent">
+                        ABSENT
+                    </span>
+
+                </td>
+
+                <td>
+
+                    <div class="action-buttons">
+
+                        <a th:href="@{/attendance/edit/{id}(id=${attendance.attendanceId})}"
+                           class="btn btn-primary">
+                            Edit
+                        </a>
+
+                        <a th:href="@{/attendance/delete/{id}(id=${attendance.attendanceId})}"
+                           class="btn btn-danger"
+                           onclick="return confirm('Are you sure you want to delete this attendance record?');">
+                            Delete
+                        </a>
+
+                    </div>
+
+                </td>
+
+            </tr>
+
+            <tr th:if="${#lists.isEmpty(attendanceRecords)}">
+
+                <td colspan="6">
+                    No attendance records found.
+                </td>
+
+            </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
