@@ -6,6 +6,7 @@ import com.example.classroomattendancemarkingsystem.model.Student;
 import com.example.classroomattendancemarkingsystem.repository.AttendanceRecordRepository;
 import com.example.classroomattendancemarkingsystem.repository.SessionRepository;
 import com.example.classroomattendancemarkingsystem.repository.StudentRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,8 +19,12 @@ public class AttendanceService {
     private final StudentRepository studentRepository;
     private final SessionRepository sessionRepository;
 
-    // Change this value if your college requires another threshold.
+    // Minimum required attendance percentage
     private static final double MINIMUM_ATTENDANCE = 75.0;
+
+    // =========================================================
+    // CONSTRUCTOR
+    // =========================================================
 
     public AttendanceService(
             AttendanceRecordRepository attendanceRepository,
@@ -31,17 +36,18 @@ public class AttendanceService {
         this.sessionRepository = sessionRepository;
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // GET ALL ATTENDANCE
-    // ---------------------------------------------------------
+    // =========================================================
 
     public List<AttendanceRecord> getAllAttendance() {
+
         return attendanceRepository.findAll();
     }
 
-    // ---------------------------------------------------------
-    // GET BY ID
-    // ---------------------------------------------------------
+    // =========================================================
+    // GET ATTENDANCE BY ID
+    // =========================================================
 
     public AttendanceRecord getAttendanceById(Long id) {
 
@@ -49,12 +55,13 @@ public class AttendanceService {
                 .orElseThrow(() ->
                         new RuntimeException(
                                 "Attendance record not found: " + id
-                        ));
+                        )
+                );
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // MARK ATTENDANCE
-    // ---------------------------------------------------------
+    // =========================================================
 
     @Transactional
     public AttendanceRecord markAttendance(
@@ -66,28 +73,30 @@ public class AttendanceService {
                 .orElseThrow(() ->
                         new RuntimeException(
                                 "Student not found: " + studentId
-                        ));
+                        )
+                );
 
         Session session = sessionRepository.findById(sessionId)
                 .orElseThrow(() ->
                         new RuntimeException(
                                 "Session not found: " + sessionId
-                        ));
+                        )
+                );
 
-        /*
-         * Business rule:
-         * One student can be marked only once
-         * for one session.
-         */
-        if (attendanceRepository
-                .existsByStudentAndSession(student, session)) {
+        // Prevent duplicate attendance
+        boolean alreadyMarked =
+                attendanceRepository
+                        .existsByStudentAndSession(student, session);
+
+        if (alreadyMarked) {
 
             throw new RuntimeException(
                     "Attendance already marked for this student and session."
             );
         }
 
-        AttendanceRecord attendance = new AttendanceRecord();
+        AttendanceRecord attendance =
+                new AttendanceRecord();
 
         attendance.setStudent(student);
         attendance.setSession(session);
@@ -96,9 +105,9 @@ public class AttendanceService {
         return attendanceRepository.save(attendance);
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // UPDATE ATTENDANCE
-    // ---------------------------------------------------------
+    // =========================================================
 
     @Transactional
     public AttendanceRecord updateAttendance(
@@ -113,14 +122,15 @@ public class AttendanceService {
         return attendanceRepository.save(attendance);
     }
 
-    // ---------------------------------------------------------
-    // DELETE
-    // ---------------------------------------------------------
+    // =========================================================
+    // DELETE ATTENDANCE
+    // =========================================================
 
     @Transactional
     public void deleteAttendance(Long id) {
 
         if (!attendanceRepository.existsById(id)) {
+
             throw new RuntimeException(
                     "Attendance record not found: " + id
             );
@@ -129,9 +139,9 @@ public class AttendanceService {
         attendanceRepository.deleteById(id);
     }
 
-    // ---------------------------------------------------------
-    // STUDENT ATTENDANCE
-    // ---------------------------------------------------------
+    // =========================================================
+    // GET STUDENT ATTENDANCE
+    // =========================================================
 
     public List<AttendanceRecord> getStudentAttendance(
             Long studentId) {
@@ -140,14 +150,15 @@ public class AttendanceService {
                 .orElseThrow(() ->
                         new RuntimeException(
                                 "Student not found: " + studentId
-                        ));
+                        )
+                );
 
         return attendanceRepository.findByStudent(student);
     }
 
-    // ---------------------------------------------------------
-    // SESSION ATTENDANCE
-    // ---------------------------------------------------------
+    // =========================================================
+    // GET SESSION ATTENDANCE
+    // =========================================================
 
     public List<AttendanceRecord> getSessionAttendance(
             Long sessionId) {
@@ -156,26 +167,30 @@ public class AttendanceService {
                 .orElseThrow(() ->
                         new RuntimeException(
                                 "Session not found: " + sessionId
-                        ));
+                        )
+                );
 
         return attendanceRepository.findBySession(session);
     }
 
-    // ---------------------------------------------------------
-    // ATTENDANCE PERCENTAGE
-    // ---------------------------------------------------------
+    // =========================================================
+    // GET ATTENDANCE PERCENTAGE
+    // =========================================================
 
-    public double getAttendancePercentage(Long studentId) {
+    public double getAttendancePercentage(
+            Long studentId) {
 
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() ->
                         new RuntimeException(
                                 "Student not found: " + studentId
-                        ));
+                        )
+                );
 
         long total =
                 attendanceRepository.countByStudent(student);
 
+        // No attendance records
         if (total == 0) {
             return 0.0;
         }
@@ -190,9 +205,9 @@ public class AttendanceService {
         return (present * 100.0) / total;
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // SHORTAGE CHECK
-    // ---------------------------------------------------------
+    // =========================================================
 
     public boolean hasShortage(Long studentId) {
 
@@ -202,11 +217,12 @@ public class AttendanceService {
         return percentage < MINIMUM_ATTENDANCE;
     }
 
-    // ---------------------------------------------------------
-    // GET THRESHOLD
-    // ---------------------------------------------------------
+    // =========================================================
+    // GET MINIMUM ATTENDANCE
+    // =========================================================
 
     public double getMinimumAttendance() {
+
         return MINIMUM_ATTENDANCE;
     }
 }

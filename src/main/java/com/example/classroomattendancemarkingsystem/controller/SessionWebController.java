@@ -1,8 +1,15 @@
 package com.example.classroomattendancemarkingsystem.controller;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.classroomattendancemarkingsystem.model.Session;
 import com.example.classroomattendancemarkingsystem.service.SessionService;
@@ -23,109 +30,93 @@ public class SessionWebController {
         this.subjectService = subjectService;
     }
 
-    // ==========================================
+
+    // =====================================================
     // SHOW ALL SESSIONS
-    // /sessions
-    // ==========================================
+    // =====================================================
 
     @GetMapping
-    public String sessions(Model model) {
+    public String showSessions(Model model) {
 
         model.addAttribute(
-            "sessions",
-            sessionService.getAllSessions()
+                "sessions",
+                sessionService.getAllSessions()
         );
 
         return "sessions";
     }
 
-    // ==========================================
-    // SHOW ADD FORM
-    // /sessions/new
-    // ==========================================
+
+    // =====================================================
+    // SHOW ADD SESSION FORM
+    // =====================================================
 
     @GetMapping("/new")
-    public String newSession(Model model) {
+    public String showAddForm(Model model) {
+
+        // Do NOT use session as Thymeleaf variable
+        // inside HTML with th:object="${session}"
 
         model.addAttribute(
-            "session",
-            new Session()
-        );
-
-        model.addAttribute(
-            "subjects",
-            subjectService.getAllSubjects()
+                "subjects",
+                subjectService.getAllSubjects()
         );
 
         return "session-form";
     }
 
-    // ==========================================
+
+    // =====================================================
     // SAVE SESSION
-    // /sessions/save
-    // ==========================================
+    // =====================================================
 
     @PostMapping("/save")
     public String saveSession(
-            @RequestParam("subjectId") Long subjectId,
-            @ModelAttribute("session") Session session) {
+
+            @RequestParam("subjectId")
+            Long subjectId,
+
+            @RequestParam("sessionDate")
+            LocalDate sessionDate,
+
+            @RequestParam("startTime")
+            LocalTime startTime,
+
+            @RequestParam("endTime")
+            LocalTime endTime) {
+
+
+        Session session = new Session();
+
+
+        session.setSessionDate(
+                sessionDate
+        );
+
+
+        session.setStartTime(
+                startTime
+        );
+
+
+        session.setEndTime(
+                endTime
+        );
+
 
         sessionService.createSession(
-            subjectId,
-            session
+                subjectId,
+                session
         );
+
 
         return "redirect:/sessions";
     }
 
-    // ==========================================
-    // SHOW EDIT FORM
-    // /sessions/edit/{id}
-    // ==========================================
 
-    @GetMapping("/edit/{id}")
-    public String editSession(
-            @PathVariable Long id,
-            Model model) {
-
-        Session session =
-                sessionService.getSessionById(id);
-
-        model.addAttribute(
-            "session",
-            session
-        );
-
-        model.addAttribute(
-            "subjects",
-            subjectService.getAllSubjects()
-        );
-
-        return "session-edit";
-    }
-
-    // ==========================================
-    // UPDATE SESSION
-    // ==========================================
-
-    @PostMapping("/update/{id}")
-    public String updateSession(
-            @PathVariable Long id,
-            @RequestParam("subjectId") Long subjectId,
-            @ModelAttribute("session") Session session) {
-
-        sessionService.updateSession(
-            id,
-            subjectId,
-            session
-        );
-
-        return "redirect:/sessions";
-    }
-
-    // ==========================================
+    // =====================================================
     // DELETE SESSION
-    // ==========================================
+    // =====================================================
 
     @GetMapping("/delete/{id}")
     public String deleteSession(
@@ -135,4 +126,5 @@ public class SessionWebController {
 
         return "redirect:/sessions";
     }
+
 }

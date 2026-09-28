@@ -1,6 +1,5 @@
 package com.example.classroomattendancemarkingsystem.controller;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -29,67 +28,42 @@ public class SessionController {
         this.sessionService = sessionService;
     }
 
-    // ==========================================
-    // GET ALL
+
+    // =====================================================
+    // GET ALL SESSIONS
     // GET /api/sessions
-    // ==========================================
+    // =====================================================
 
     @GetMapping
     public ResponseEntity<List<Session>> getAllSessions() {
 
-        return ResponseEntity.ok(
-            sessionService.getAllSessions()
-        );
+        List<Session> sessions =
+                sessionService.getAllSessions();
+
+        return ResponseEntity.ok(sessions);
     }
 
-    // ==========================================
-    // GET BY ID
+
+    // =====================================================
+    // GET SESSION BY ID
     // GET /api/sessions/1
-    // ==========================================
+    // =====================================================
 
     @GetMapping("/{id}")
     public ResponseEntity<Session> getSessionById(
             @PathVariable Long id) {
 
-        return ResponseEntity.ok(
-            sessionService.getSessionById(id)
-        );
+        Session session =
+                sessionService.getSessionById(id);
+
+        return ResponseEntity.ok(session);
     }
 
-    // ==========================================
-    // GET BY SUBJECT
-    // GET /api/sessions/subject/1
-    // ==========================================
 
-    @GetMapping("/subject/{subjectId}")
-    public ResponseEntity<List<Session>> getBySubject(
-            @PathVariable Long subjectId) {
-
-        return ResponseEntity.ok(
-            sessionService.getSessionsBySubject(
-                subjectId
-            )
-        );
-    }
-
-    // ==========================================
-    // GET BY DATE
-    // GET /api/sessions/date/2026-09-28
-    // ==========================================
-
-    @GetMapping("/date/{date}")
-    public ResponseEntity<List<Session>> getByDate(
-            @PathVariable LocalDate date) {
-
-        return ResponseEntity.ok(
-            sessionService.getSessionsByDate(date)
-        );
-    }
-
-    // ==========================================
-    // CREATE
-    // POST /api/sessions
-    // ==========================================
+    // =====================================================
+    // CREATE SESSION
+    // POST /api/sessions/subject/1
+    // =====================================================
 
     @PostMapping("/subject/{subjectId}")
     public ResponseEntity<Session> createSession(
@@ -98,8 +72,8 @@ public class SessionController {
 
         Session savedSession =
                 sessionService.createSession(
-                    subjectId,
-                    session
+                        subjectId,
+                        session
                 );
 
         return ResponseEntity
@@ -107,10 +81,11 @@ public class SessionController {
                 .body(savedSession);
     }
 
-    // ==========================================
-    // UPDATE
+
+    // =====================================================
+    // UPDATE SESSION
     // PUT /api/sessions/1/subject/1
-    // ==========================================
+    // =====================================================
 
     @PutMapping("/{id}/subject/{subjectId}")
     public ResponseEntity<Session> updateSession(
@@ -120,18 +95,21 @@ public class SessionController {
 
         Session updatedSession =
                 sessionService.updateSession(
-                    id,
-                    subjectId,
-                    session
+                        id,
+                        subjectId,
+                        session
                 );
 
-        return ResponseEntity.ok(updatedSession);
+        return ResponseEntity.ok(
+                updatedSession
+        );
     }
 
-    // ==========================================
-    // DELETE
+
+    // =====================================================
+    // DELETE SESSION
     // DELETE /api/sessions/1
-    // ==========================================
+    // =====================================================
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteSession(
@@ -140,7 +118,8 @@ public class SessionController {
         sessionService.deleteSession(id);
 
         return ResponseEntity.ok(
-            "Session deleted successfully"
+                "Session deleted successfully"
         );
     }
+
 }

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Attendance Records</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.10);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #222;
+        }
+
+        .message {
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .success {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .button-area {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 11px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .btn-add {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-home {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            background: #343a40;
+            color: white;
+            padding: 13px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        td {
+            padding: 13px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .present {
+            color: #198754;
+            font-weight: bold;
+        }
+
+        .absent {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .no-data {
+            padding: 30px;
+            text-align: center;
+            color: #777;
+        }
+
+        @media (max-width: 768px) {
+
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 15px;
+                overflow-x: auto;
+            }
+
+            table {
+                font-size: 13px;
+                min-width: 850px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>
+        Attendance Records
+    </h1>
+
+
+    <!-- ================================================= -->
+    <!-- SUCCESS MESSAGE -->
+    <!-- ================================================= -->
+
+    <div th:if="${success}"
+         class="message success"
+         th:text="${success}">
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- ERROR MESSAGE -->
+    <!-- ================================================= -->
+
+    <div th:if="${error}"
+         class="message error"
+         th:text="${error}">
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- BUTTONS -->
+    <!-- ================================================= -->
+
+    <div class="button-area">
+
+        <a th:href="@{/attendance}"
+           class="btn btn-add">
+            Mark Attendance
+        </a>
+
+        <a th:href="@{/sessions}"
+           class="btn btn-add">
+            View Sessions
+        </a>
+
+     
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- ATTENDANCE TABLE -->
+    <!-- ================================================= -->
+
+    <table>
+
+        <thead>
+
+        <tr>
+
+            <th>
+                S.No
+            </th>
+
+            <th>
+                Attendance ID
+            </th>
+
+            <th>
+                Student ID
+            </th>
+
+            <th>
+                Roll Number
+            </th>
+
+            <th>
+                Student Name
+            </th>
+
+            <th>
+                Session ID
+            </th>
+
+            <th>
+                Subject
+            </th>
+
+            <th>
+                Session Date
+            </th>
+
+            <th>
+                Status
+            </th>
+
+            <th>
+                Action
+            </th>
+
+        </tr>
+
+        </thead>
+
+
+        <tbody>
+
+        <!-- ================================================= -->
+        <!-- ATTENDANCE RECORDS -->
+        <!-- ================================================= -->
+
+        <tr th:each="record, stat : ${attendanceRecords}">
+
+            <!-- S.NO -->
+
+            <td th:text="${stat.count}">
+                1
+            </td>
+
+
+            <!-- ATTENDANCE ID -->
+
+            <td th:text="${record.attendanceId}">
+                1
+            </td>
+
+
+            <!-- STUDENT ID -->
+
+            <td th:text="${record.student.studentId}">
+                1
+            </td>
+
+
+            <!-- ROLL NUMBER -->
+
+            <td th:text="${record.student.rollNumber}">
+                Roll Number
+            </td>
+
+
+            <!-- STUDENT NAME -->
+
+            <td th:text="${record.student.name}">
+                Student Name
+            </td>
+
+
+            <!-- SESSION ID -->
+
+            <td th:text="${record.session.sessionId}">
+                1
+            </td>
+
+
+            <!-- SUBJECT -->
+
+            <td>
+
+                <span
+                    th:if="${record.session.subject != null}"
+                    th:text="${record.session.subject.subjectCode
+                    + ' - '
+                    + record.session.subject.subjectName}">
+                </span>
+
+                <span
+                    th:unless="${record.session.subject != null}">
+                    No Subject
+                </span>
+
+            </td>
+
+
+            <!-- SESSION DATE -->
+
+            <td th:text="${record.session.sessionDate}">
+                Date
+            </td>
+
+
+            <!-- STATUS -->
+
+            <td>
+
+                <span th:if="${record.present}"
+                      class="present">
+                    PRESENT
+                </span>
+
+                <span th:unless="${record.present}"
+                      class="absent">
+                    ABSENT
+                </span>
+
+            </td>
+
+
+            <!-- DELETE -->
+
+            <td>
+
+                <a th:href="@{/attendance/delete/{id}(id=${record.attendanceId})}"
+                   class="btn btn-delete"
+                   onclick="return confirm('Are you sure you want to delete this attendance record?');">
+                    Delete
+                </a>
+
+            </td>
+
+        </tr>
+
+
+        <!-- ================================================= -->
+        <!-- NO RECORDS -->
+        <!-- ================================================= -->
+
+        <tr th:if="${attendanceRecords == null or attendanceRecords.isEmpty()}">
+
+            <td colspan="10"
+                class="no-data">
+
+                No attendance records found.
+
+                <br><br>
+
+                Please mark attendance first.
+
+            </td>
+
+        </tr>
+
+        </tbody>
+
+    </table>
+
+</div>
+
+</body>
+
+</html>

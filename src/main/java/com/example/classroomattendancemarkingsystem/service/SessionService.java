@@ -1,6 +1,6 @@
 package com.example.classroomattendancemarkingsystem.service;
 
-import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -8,187 +8,180 @@ import org.springframework.stereotype.Service;
 import com.example.classroomattendancemarkingsystem.model.Session;
 import com.example.classroomattendancemarkingsystem.model.Subject;
 import com.example.classroomattendancemarkingsystem.repository.SessionRepository;
-import com.example.classroomattendancemarkingsystem.repository.SubjectRepository;
 
 @Service
 public class SessionService {
 
     private final SessionRepository sessionRepository;
-    private final SubjectRepository subjectRepository;
+    private final SubjectService subjectService;
 
     public SessionService(
             SessionRepository sessionRepository,
-            SubjectRepository subjectRepository) {
+            SubjectService subjectService) {
 
         this.sessionRepository = sessionRepository;
-        this.subjectRepository = subjectRepository;
+        this.subjectService = subjectService;
     }
 
-    // ==========================================
+
+    // =====================================================
     // GET ALL SESSIONS
-    // ==========================================
+    // =====================================================
 
     public List<Session> getAllSessions() {
+
         return sessionRepository.findAll();
     }
 
-    // ==========================================
+
+    // =====================================================
     // GET SESSION BY ID
-    // ==========================================
+    // =====================================================
 
     public Session getSessionById(Long id) {
 
         return sessionRepository.findById(id)
                 .orElseThrow(() ->
-                    new RuntimeException(
-                        "Session not found with ID: " + id
-                    )
+                        new RuntimeException(
+                                "Session not found with ID: " + id
+                        )
                 );
     }
 
-    // ==========================================
-    // GET SESSIONS BY SUBJECT
-    // ==========================================
 
-    public List<Session> getSessionsBySubject(Long subjectId) {
-
-        Subject subject = subjectRepository.findById(subjectId)
-                .orElseThrow(() ->
-                    new RuntimeException(
-                        "Subject not found with ID: " + subjectId
-                    )
-                );
-
-        return sessionRepository.findBySubject(subject);
-    }
-
-    // ==========================================
+    // =====================================================
     // CREATE SESSION
-    // ==========================================
+    // =====================================================
 
     public Session createSession(
             Long subjectId,
             Session session) {
 
-        if (session.getSessionDate() == null) {
-            throw new RuntimeException(
-                "Session date is required"
-            );
-        }
+        // Get subject from database
+        Subject subject =
+                subjectService.getSubjectById(subjectId);
 
-        if (session.getStartTime() == null) {
-            throw new RuntimeException(
-                "Start time is required"
-            );
-        }
-
-        if (session.getEndTime() == null) {
-            throw new RuntimeException(
-                "End time is required"
-            );
-        }
-
-        if (!session.getEndTime()
-                .isAfter(session.getStartTime())) {
-
-            throw new RuntimeException(
-                "End time must be after start time"
-            );
-        }
-
-        Subject subject = subjectRepository.findById(subjectId)
-                .orElseThrow(() ->
-                    new RuntimeException(
-                        "Subject not found with ID: " + subjectId
-                    )
-                );
-
+        // Set subject
         session.setSubject(subject);
 
+        // Validate session
+        validateSession(session);
+
+        // Save
         return sessionRepository.save(session);
     }
 
-    // ==========================================
+
+    // =====================================================
     // UPDATE SESSION
-    // ==========================================
+    // =====================================================
 
     public Session updateSession(
             Long id,
             Long subjectId,
-            Session updatedSession) {
+            Session session) {
 
+        // Get existing session
         Session existingSession =
                 getSessionById(id);
 
-        if (updatedSession.getSessionDate() == null) {
-            throw new RuntimeException(
-                "Session date is required"
-            );
-        }
+        // Get subject
+        Subject subject =
+                subjectService.getSubjectById(subjectId);
 
-        if (updatedSession.getStartTime() == null) {
-            throw new RuntimeException(
-                "Start time is required"
-            );
-        }
-
-        if (updatedSession.getEndTime() == null) {
-            throw new RuntimeException(
-                "End time is required"
-            );
-        }
-
-        if (!updatedSession.getEndTime()
-                .isAfter(updatedSession.getStartTime())) {
-
-            throw new RuntimeException(
-                "End time must be after start time"
-            );
-        }
-
-        Subject subject = subjectRepository.findById(subjectId)
-                .orElseThrow(() ->
-                    new RuntimeException(
-                        "Subject not found with ID: " + subjectId
-                    )
-                );
-
+        // Set updated values
         existingSession.setSubject(subject);
+
         existingSession.setSessionDate(
-            updatedSession.getSessionDate()
-        );
-        existingSession.setStartTime(
-            updatedSession.getStartTime()
-        );
-        existingSession.setEndTime(
-            updatedSession.getEndTime()
+                session.getSessionDate()
         );
 
-        return sessionRepository.save(existingSession);
+        existingSession.setStartTime(
+                session.getStartTime()
+        );
+
+        existingSession.setEndTime(
+                session.getEndTime()
+        );
+
+        // Validate
+        validateSession(existingSession);
+
+        // Save
+        return sessionRepository.save(
+                existingSession
+        );
     }
 
-    // ==========================================
+
+    // =====================================================
     // DELETE SESSION
-    // ==========================================
+    // =====================================================
 
     public void deleteSession(Long id) {
 
         if (!sessionRepository.existsById(id)) {
+
             throw new RuntimeException(
-                "Session not found with ID: " + id
+                    "Session not found with ID: " + id
             );
         }
 
         sessionRepository.deleteById(id);
     }
 
-    // ==========================================
-    // GET SESSIONS BY DATE
-    // ==========================================
 
-    public List<Session> getSessionsByDate(
-            LocalDate date) {
+    // =====================================================
+    // VALIDATE SESSION
+    // =====================================================
 
-        return sessionRepository.findBySessionDate(date);
+    private void validateSession(Session session) {
+
+        if (session.getSubject() == null) {
+
+            throw new RuntimeException(
+                    "Subject is required"
+            );
+        }
+
+
+        if (session.getSessionDate() == null) {
+
+            throw new RuntimeException(
+                    "Session date is required"
+            );
+        }
+
+
+        if (session.getStartTime() == null) {
+
+            throw new RuntimeException(
+                    "Start time is required"
+            );
+        }
+
+
+        if (session.getEndTime() == null) {
+
+            throw new RuntimeException(
+                    "End time is required"
+            );
+        }
+
+
+        LocalTime startTime =
+                session.getStartTime();
+
+        LocalTime endTime =
+                session.getEndTime();
+
+
+        if (!endTime.isAfter(startTime)) {
+
+            throw new RuntimeException(
+                    "End time must be after start time"
+            );
+        }
     }
+
 }

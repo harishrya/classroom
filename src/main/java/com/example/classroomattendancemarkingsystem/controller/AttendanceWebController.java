@@ -1,199 +1,205 @@
 package com.example.classroomattendancemarkingsystem.controller;
 
-import com.example.classroomattendancemarkingsystem.model.AttendanceRecord;
-import com.example.classroomattendancemarkingsystem.service.AttendanceService;
-import com.example.classroomattendancemarkingsystem.service.SessionService;
-import com.example.classroomattendancemarkingsystem.service.StudentService;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.example.classroomattendancemarkingsystem.model.AttendanceRecord;
+import com.example.classroomattendancemarkingsystem.model.Session;
+import com.example.classroomattendancemarkingsystem.model.Student;
+import com.example.classroomattendancemarkingsystem.repository.AttendanceRecordRepository;
+import com.example.classroomattendancemarkingsystem.repository.SessionRepository;
+import com.example.classroomattendancemarkingsystem.repository.StudentRepository;
 
 @Controller
 @RequestMapping("/attendance")
 public class AttendanceWebController {
 
-    private final AttendanceService attendanceService;
-    private final StudentService studentService;
-    private final SessionService sessionService;
+    private final AttendanceRecordRepository attendanceRecordRepository;
+    private final StudentRepository studentRepository;
+    private final SessionRepository sessionRepository;
 
     public AttendanceWebController(
-            AttendanceService attendanceService,
-            StudentService studentService,
-            SessionService sessionService) {
+            AttendanceRecordRepository attendanceRecordRepository,
+            StudentRepository studentRepository,
+            SessionRepository sessionRepository) {
 
-        this.attendanceService = attendanceService;
-        this.studentService = studentService;
-        this.sessionService = sessionService;
+        this.attendanceRecordRepository = attendanceRecordRepository;
+        this.studentRepository = studentRepository;
+        this.sessionRepository = sessionRepository;
     }
 
-    // =====================================================
-    // SHOW ALL ATTENDANCE
-    // URL: /attendance
-    // =====================================================
+    // =========================================================
+    // ATTENDANCE PAGE
+    // GET /attendance
+    // =========================================================
 
     @GetMapping
-    public String attendance(Model model) {
+    public String attendancePage(Model model) {
 
-        model.addAttribute(
-                "attendanceList",
-                attendanceService.getAllAttendance()
-        );
+        List<Student> students = studentRepository.findAll();
+
+        List<Session> sessions = sessionRepository.findAll();
+
+        model.addAttribute("students", students);
+        model.addAttribute("sessions", sessions);
 
         return "attendance";
     }
 
-    // =====================================================
-    // SHOW MARK ATTENDANCE PAGE
-    // URL: /attendance/new
-    // =====================================================
-
-    @GetMapping("/new")
-    public String newAttendance(Model model) {
-
-        model.addAttribute(
-                "students",
-                studentService.getAllStudents()
-        );
-
-        model.addAttribute(
-                "sessions",
-                sessionService.getAllSessions()
-        );
-
-        return "attendance-form";
-    }
-
-    // =====================================================
+    // =========================================================
     // SAVE ATTENDANCE
     // POST /attendance/save
-    // =====================================================
+    // =========================================================
 
     @PostMapping("/save")
     public String saveAttendance(
-            @RequestParam Long studentId,
-            @RequestParam Long sessionId,
-            @RequestParam boolean present,
-            Model model) {
+            @RequestParam("sessionId") Long sessionId,
+            @RequestParam(value = "attendanceDate", required = false)
+            String attendanceDate,
+            @RequestParam Map<String, String> params,
+            RedirectAttributes redirectAttributes) {
 
         try {
 
-            attendanceService.markAttendance(
-                    studentId,
-                    sessionId,
-                    present
+            Session selectedSession = sessionRepository
+                    .findById(sessionId)
+                    .orElseThrow(() ->
+                            new RuntimeException(
+                                    "Session not found: " + sessionId
+                            )
+                    );
+
+            List<Student> students =
+                    studentRepository.findAll();
+
+            int savedCount = 0;
+            int skippedCount = 0;
+
+            for (Student student : students) {
+
+                String key =
+                        "attendance_" + student.getStudentId();
+
+                String status = params.get(key);
+
+                if (status == null || status.isBlank()) {
+                    continue;
+                }
+
+                boolean present =
+                        "PRESENT".equalsIgnoreCase(status);
+
+                boolean alreadyExists =
+                        attendanceRecordRepository
+                                .existsByStudentAndSession(
+                                        student,
+                                        selectedSession
+                                );
+
+                if (alreadyExists) {
+                    skippedCount++;
+                    continue;
+                }
+
+                AttendanceRecord attendance =
+                        new AttendanceRecord();
+
+                attendance.setStudent(student);
+                attendance.setSession(selectedSession);
+                attendance.setPresent(present);
+
+                attendanceRecordRepository.save(attendance);
+
+                savedCount++;
+            }
+
+            redirectAttributes.addFlashAttribute(
+                    "success",
+                    "Attendance saved successfully. "
+                            + "Saved: " + savedCount
+                            + ", Already marked: " + skippedCount
+            );
+
+            return "redirect:/attendance/view";
+
+        } catch (Exception e) {
+
+            redirectAttributes.addFlashAttribute(
+                    "error",
+                    "Unable to save attendance: "
+                            + e.getMessage()
             );
 
             return "redirect:/attendance";
-
-        } catch (RuntimeException e) {
-
-            model.addAttribute(
-                    "error",
-                    e.getMessage()
-            );
-
-            model.addAttribute(
-                    "students",
-                    studentService.getAllStudents()
-            );
-
-            model.addAttribute(
-                    "sessions",
-                    sessionService.getAllSessions()
-            );
-
-            return "attendance-form";
         }
     }
 
-    // =====================================================
-    // EDIT ATTENDANCE
-    // GET /attendance/edit/{id}
-    // =====================================================
+    // =========================================================
+    // VIEW ATTENDANCE
+    // GET /attendance/view
+    // =========================================================
 
-    @GetMapping("/edit/{id}")
-    public String editAttendance(
-            @PathVariable Long id,
-            Model model) {
+    @GetMapping("/view")
+    public String viewAttendance(Model model) {
 
-        AttendanceRecord attendance =
-                attendanceService.getAttendanceById(id);
+        List<AttendanceRecord> attendanceRecords =
+                attendanceRecordRepository.findAll();
 
         model.addAttribute(
-                "attendance",
-                attendance
+                "attendanceRecords",
+                attendanceRecords
         );
 
-        return "attendance-edit";
+        return "attendance-view";
     }
 
-    // =====================================================
-    // UPDATE ATTENDANCE
-    // POST /attendance/update/{id}
-    // =====================================================
-
-    @PostMapping("/update/{id}")
-    public String updateAttendance(
-            @PathVariable Long id,
-            @RequestParam boolean present) {
-
-        attendanceService.updateAttendance(
-                id,
-                present
-        );
-
-        return "redirect:/attendance";
-    }
-
-    // =====================================================
+    // =========================================================
     // DELETE ATTENDANCE
     // GET /attendance/delete/{id}
-    // =====================================================
+    // =========================================================
 
     @GetMapping("/delete/{id}")
     public String deleteAttendance(
-            @PathVariable Long id) {
+            @PathVariable("id") Long id,
+            RedirectAttributes redirectAttributes) {
 
-        attendanceService.deleteAttendance(id);
+        try {
 
-        return "redirect:/attendance";
-    }
+            if (!attendanceRecordRepository.existsById(id)) {
 
-    // =====================================================
-    // STUDENT ATTENDANCE
-    // GET /attendance/student/{studentId}
-    // =====================================================
+                redirectAttributes.addFlashAttribute(
+                        "error",
+                        "Attendance record not found: " + id
+                );
 
-    @GetMapping("/student/{studentId}")
-    public String studentAttendance(
-            @PathVariable Long studentId,
-            Model model) {
+                return "redirect:/attendance/view";
+            }
 
-        model.addAttribute(
-                "attendanceList",
-                attendanceService
-                        .getStudentAttendance(studentId)
-        );
+            attendanceRecordRepository.deleteById(id);
 
-        model.addAttribute(
-                "percentage",
-                attendanceService
-                        .getAttendancePercentage(studentId)
-        );
+            redirectAttributes.addFlashAttribute(
+                    "success",
+                    "Attendance deleted successfully."
+            );
 
-        model.addAttribute(
-                "shortage",
-                attendanceService
-                        .hasShortage(studentId)
-        );
+        } catch (Exception e) {
 
-        model.addAttribute(
-                "minimumAttendance",
-                attendanceService
-                        .getMinimumAttendance()
-        );
+            redirectAttributes.addFlashAttribute(
+                    "error",
+                    "Unable to delete attendance: "
+                            + e.getMessage()
+            );
+        }
 
-        return "student-attendance";
+        return "redirect:/attendance/view";
     }
 }
